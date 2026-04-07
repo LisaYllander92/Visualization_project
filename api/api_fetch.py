@@ -1,4 +1,5 @@
 import requests
+import pandas as pd
 
 API_KEY = "mge7jublv8ldXpcWwPPmfAdDtelWwHuA"
 
@@ -10,10 +11,14 @@ URL = "https://app.ticketmaster.com/discovery/v2/events"
 params = {
     "apikey": API_KEY,
     "city": "Stockholm",
-    "size": 10
+    "size": 200
 }
 
 response = requests.get(URL, params=params)
 data = response.json()
 
-print(data)
+events = data["_embedded"]["events"]
+
+df = pd.DataFrame(events)
+df.to_csv("events.csv", index=False)
+print(df.head())

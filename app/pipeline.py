@@ -31,8 +31,8 @@ def extract() -> pd.DataFrame:
     print("\n[EXTRACT] Loading CSV...")
     df = pd.read_csv(csv_file)
 
-    # Drop empty price columns
-    df = df.drop(columns=[c for c in ["price_min", "price_max", "price_currency"] if c in df.columns])
+    # Drop empty price and fetched_at columns
+    df = df.drop(columns=[c for c in ["price_min", "price_max", "price_currency","fetched_at" ] if c in df.columns])
 
     print(f"[EXTRACT] Rows: {len(df)}")
     return df
@@ -47,7 +47,7 @@ def transform(df: pd.DataFrame):
     #  Reject: missing ID 
     mask = df["event_id"].isna() | (df["event_id"].str.strip() == "")
     rejected.append(df[mask].assign(rejected_reason="Missing event_id"))
-    df = df[~mask]
+    df = df[~mask] 
 
     # Reject: missing name 
     mask = df["name"].isna() | (df["name"].str.strip() == "")
@@ -103,8 +103,6 @@ def transform(df: pd.DataFrame):
         if col in df.columns:
             df[col] = df[col].str.strip()
 
-    # Rename
-    df = df.rename(columns={"date": "event_date", "time": "event_time"})
 
     # Combine rejected
     rejected_df = pd.concat(rejected, ignore_index=True) if rejected else pd.DataFrame()
@@ -142,8 +140,8 @@ def ensure_tables(engine):
             name            VARCHAR NOT NULL,
             url             VARCHAR,
             image_url       VARCHAR,
-            event_date      DATE,
-            event_time      VARCHAR,
+            date                DATE,
+            time      VARCHAR,
             status          VARCHAR,
             segment         VARCHAR,
             genre           VARCHAR,
@@ -183,7 +181,7 @@ def load(clean_df: pd.DataFrame, raw_df: pd.DataFrame, engine):
        # Only keep columns that exist in the events_clean table schema
         # Only write columns that exist in the events_clean schema
     clean_cols = [
-            "event_id", "name", "url", "image_url", "event_date", "event_time",
+            "event_id", "name", "url", "image_url", "date", "time",
              "status", "segment", "genre", "subgenre", "venue_name", "venue_city",
              "venue_address", "venue_lat", "venue_lon",
               "day_of_week", "month_name", "month_num", "year", "hour",

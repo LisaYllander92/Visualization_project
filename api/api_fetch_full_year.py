@@ -6,11 +6,11 @@ import time
 API_KEY = "mge7jublv8ldXpcWwPPmfAdDtelWwHuA"
 URL = "https://app.ticketmaster.com/discovery/v2/events"
 
-all_cleaned_events = []
+all_events = []
 
-# Vi loopar igenom 5 sidor för att vara säkra på att få med hela året (ca 1000 events totalt)
+# Loop through all five pages to make sure we get all the data for this year.
 for page in range(5):
-    print(f"Hämtar sida {page}...")
+    print(f"Retrieve page {page}...")
 
     params = {
         "apikey": API_KEY,
@@ -29,7 +29,7 @@ for page in range(5):
             events = data["_embedded"]["events"]
 
             for e in events:
-                # Datum och tidhantering
+                # 1. Managing date and time
                 local_date_str = e.get("dates", {}).get("start", {}).get("localDate")
                 local_time_str = e.get("dates", {}).get("start", {}).get("localTime", "00:00:00")
 
@@ -40,10 +40,10 @@ for page in range(5):
                     except:
                         pass
 
-                # Pris och arena
-                price_data = e.get("priceRanges", [{}])[0]
+                # 2. Fetch location information for venue
                 venue = e.get("_embedded", {}).get("venues", [{}])[0]
 
+                # 3. Structure data
                 event_info = {
                     "event_id": e.get("id"),
                     "name": e.get("name"),
@@ -60,35 +60,32 @@ for page in range(5):
                     "venue_address": venue.get("address", {}).get("line1"),
                     "venue_lat": venue.get("location", {}).get("latitude"),
                     "venue_lon": venue.get("location", {}).get("longitude"),
-                    "price_min": price_data.get("min"),
-                    "price_max": price_data.get("max"),
 
-                    # Tids-extraktion för Power BI
+                    # Time units for Power BI-filter and graphs
                     "day_of_week": dt_obj.strftime("%A") if dt_obj else None,
                     "month_name": dt_obj.strftime("%B") if dt_obj else None,
                     "month_num": dt_obj.month if dt_obj else None,
                     "year": dt_obj.year if dt_obj else None,
                     "hour": int(local_time_str.split(":")[0]) if local_time_str else None
                 }
-                all_cleaned_events.append(event_info)
+                all_events.append(event_info)
         else:
-            # Om det inte finns fler sidor bryter vi loopen
-            print("Inga fler events hittades.")
+            print("No more events found.")
             break
 
-        # Ticketmaster har en gräns på 5 anrop per sekund, så vi pausar lite
+        # Ticketmaster has a limit for five API-calls per second
         time.sleep(0.3)
 
     except Exception as e:
-        print(f"Ett fel uppstod på sida {page}: {e}")
+        print(f"Error occurred on page {page}: {e}")
         break
 
-# Skapa DataFrame och rensa
-df = pd.DataFrame(all_cleaned_events)
-df = df.drop_duplicates(subset=['event_id'])  # Viktigt! Tar bort dubbletter mellan sidorna
+# Create dataframe and clear
+df = pd.DataFrame(all_events)
+df = df.drop_duplicates(subset=['event_id'])  # IMPORTANT: removes duplicates
 df = df.dropna(subset=['name', 'date'])
 
-# Spara
-df.to_csv("events_stockholm_full_year.csv", index=False, encoding='utf-8-sig')
+# Save to csv-file
+df.to_csv("events_full_year.csv", index=False, encoding='utf-8-sig')
 
-print(f"Klart! Totalt sparades {len(df)} unika events för hela året.")
+print(f"Done! Total saved {len(df)} unique events for the entire year.")

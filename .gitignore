@@ -1,3 +1,8 @@
 .env
 .venv
+
 .csv
+# Ta bort alla CSV-filer från Git-trackingen (men behåll dem lokalt)
+git rm --cached *.csv
+# Om du har CSV-filer i undermappar också
+git rm --cached **/*.csv

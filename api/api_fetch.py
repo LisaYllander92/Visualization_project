@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-API_KEY = "mge7jublv8ldXpcWwPPmfAdDtelWwHuA"
+API_KEY = "TICKETMASTER_API_KEY"
 
 # Find events and filter your search by location, date, availability, and much more.
 URL = "https://app.ticketmaster.com/discovery/v2/events"

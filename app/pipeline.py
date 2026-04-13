@@ -3,13 +3,16 @@
    Transform : validate, flag, clean
    Load   :write to PostgreSQL + export cleaned.csv and rejected.csv"""
 
-
-
 import os
-
 import pandas as pd
 from sqlalchemy import text
 from app.db import get_engine
+from app.parkingspots import  fetch_parking_data, enrich_with_parking
+from dotenv import load_dotenv
+
+load_dotenv()
+
+PARKING_API_KEY = os.getenv("PARKING_API_KEY")
 
 """ __file__ is the path to this script. We go one level up (..) to reach the
 project root, then point to folder data(CSV) and the output folder."""
@@ -29,7 +32,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # EXTRACT
 def extract() -> pd.DataFrame:
     print("\n[EXTRACT] Loading CSV...")
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv("data/events_full.csv")
 
     # Drop empty price and fetched_at columns
     df = df.drop(columns=[c for c in ["price_min", "price_max", "price_currency","fetched_at" ] if c in df.columns])
@@ -155,7 +158,9 @@ def ensure_tables(engine):
             month_name      VARCHAR,
             month_num       INTEGER,
             year            INTEGER,
-            hour            INTEGER
+            hour            INTEGER,
+            nearest_parking VARCHAR,
+            parking_distance_m DOUBLE PRECISION
         );
         """
         with engine.connect() as conn:
@@ -181,11 +186,12 @@ def load(clean_df: pd.DataFrame, raw_df: pd.DataFrame, engine):
        # Only keep columns that exist in the events_clean table schema
         # Only write columns that exist in the events_clean schema
     clean_cols = [
-            "event_id", "name", "url", "image_url", "date", "time",
-             "status", "segment", "genre", "subgenre", "venue_name", "venue_city",
-             "venue_address", "venue_lat", "venue_lon",
-              "day_of_week", "month_name", "month_num", "year", "hour",
-        ]
+        "event_id", "name", "url", "image_url", "date", "time",
+        "status", "segment", "genre", "subgenre", "venue_name", "venue_city",
+        "venue_address", "venue_lat", "venue_lon",
+        "day_of_week", "month_name", "month_num", "year", "hour",
+        "nearest_parking", "parking_distance_m",
+    ]
      
     clean_df[[c for c in clean_cols if c in clean_df.columns]].to_sql(
            "events_clean", con=engine, if_exists="append", index=False, method="multi"
@@ -218,6 +224,11 @@ def run():
 
     # Step 2: Transform
     clean, rejected = transform(raw)
+
+    ENRICH_PARKING = False  # Switch to True to activate
+    if ENRICH_PARKING:
+        parking_df = fetch_parking_data(PARKING_API_KEY)
+        clean = enrich_with_parking(clean, parking_df)
 
    
     try:

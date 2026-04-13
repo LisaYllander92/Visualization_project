@@ -2,8 +2,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 import time
+import os
+from dotenv import load_dotenv
 
-API_KEY = "mge7jublv8ldXpcWwPPmfAdDtelWwHuA"
+load_dotenv()
+API_KEY = os.getenv("TICKETMASTER_KEY")
 URL = "https://app.ticketmaster.com/discovery/v2/events"
 
 all_events = []

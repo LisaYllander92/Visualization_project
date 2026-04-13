@@ -40,7 +40,9 @@ CREATE TABLE IF NOT EXISTS events_clean (
     month_name      VARCHAR,
     month_num       INTEGER,
     year            INTEGER,
-    hour            INTEGER
+    hour            INTEGER,
+    nearest_parking VARCHAR,
+    parking_distance_m DOUBLE PRECISION
 );
 
 -- table to store search events (for statistics)

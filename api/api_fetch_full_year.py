@@ -87,6 +87,7 @@ for page in range(5):
 df = pd.DataFrame(all_events)
 df = df.drop_duplicates(subset=['event_id'])  # IMPORTANT: removes duplicates
 df = df.dropna(subset=['name', 'date'])
+df["time"] = pd.to_datetime(df["time"], format= "mixed", errors="coerce").dt.strftime("%H:%M")
 
 # Save to csv-file
 df.to_csv("events_full_year.csv", index=False, encoding='utf-8-sig')

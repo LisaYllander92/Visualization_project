@@ -1,130 +1,165 @@
 import streamlit as st
 import pandas as pd
-import duckdb
-import pydeck as pdk
+import plotly.express as px
 
-# ---------------------------
-# Load Data
-# ---------------------------
-df = pd.read_csv("data/events_full_year.csv")
-
-# Convert date
-df["date"] = pd.to_datetime(df["date"])
-
-# ---------------------------
-# Title
-# ---------------------------
-st.title("🎟️ Stockholm Events Dashboard")
-
-# ---------------------------
-# Sidebar Filters
-# ---------------------------
-st.sidebar.header("Filters")
-
-# Date filter
-date_range = st.sidebar.date_input(
-    "Select Date Range",
-    [df["date"].min(), df["date"].max()]
+# -----------------------------
+# PAGE CONFIG
+# -----------------------------
+st.set_page_config(
+    page_title="Stockholm Cultural Events",
+    page_icon="🎭",
+    layout="wide"
 )
 
-# Genre filter
-genres = st.sidebar.multiselect(
-    "Select Genre",
-    options=df["genre"].unique(),
-    default=df["genre"].unique()
-)
+# -----------------------------
+# LOAD DATA
+# -----------------------------
+@st.cache_data
+def load_data():
+    df = pd.read_csv("data/output/events_full_year.csv")
 
-# Venue filter
-venues = st.sidebar.multiselect(
-    "Select Venue",
-    options=df["venue_name"].unique(),
-    default=df["venue_name"].unique()
-)
+    # Convert date/time
+    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = df["date"].dt.month_name()
+    df["weekday"] = df["date"].dt.day_name()
 
-# ---------------------------
-# Apply Filters
-# ---------------------------
-filtered_df = df[
-    (df["date"].between(pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1]))) &
-    (df["genre"].isin(genres)) &
-    (df["venue_name"].isin(venues))
-]
+    # Clean price if exists
+    if "price" in df.columns:
+        df["price"] = pd.to_numeric(df["price"], errors="coerce").fillna(0)
 
-# ---------------------------
-# KPIs
-# ---------------------------
-st.subheader("📊 Key Metrics")
+    return df
 
-col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Events", len(filtered_df))
-col2.metric("Unique Venues", filtered_df["venue_name"].nunique())
-col3.metric("Unique Genres", filtered_df["genre"].nunique())
+df = load_data()
 
-# ---------------------------
-# Top Events (Table + URL)
-# ---------------------------
-st.subheader("🎟️ Events List")
+# -----------------------------
+# HEADER
+# -----------------------------
+st.title("🎭 Stockholm Cultural Events")
+st.caption("Discover music, theatre, arts and more happening in Stockholm.")
 
-# Make clickable links
-filtered_df["ticket_link"] = filtered_df["url"].apply(
-    lambda x: f"[View Event]({x})"
-)
+# -----------------------------
+# KPI CARDS
+# -----------------------------
+col1, col2, col3, col4 = st.columns(4)
 
-st.write(
-    filtered_df[
-        ["name", "date", "venue_name", "genre", "ticket_link"]
-    ].sort_values(by="date")
-)
+col1.metric("Total Events", len(df))
+col2.metric("Upcoming Events", (df["date"] >= pd.Timestamp.today()).sum())
+col3.metric("Venues", df["venue_name"].nunique())
+col4.metric("Categories", df["genre"].nunique())
 
-# ---------------------------
-# Top Venues
-# ---------------------------
-st.subheader("🏟️ Top Venues")
+st.divider()
 
-venue_counts = (
-    filtered_df["venue_name"]
-    .value_counts()
-    .head(10)
-)
+# -----------------------------
+# TABS
+# -----------------------------
+tab1, tab2, tab3, tab4 = st.tabs(["🔎 Discover", "🗺 Map", "📊 Trends", "🔥 Popular"])
 
-st.bar_chart(venue_counts)
+# -----------------------------
+# FILTERS (DISCOVER)
+# -----------------------------
+with tab1:
+    st.subheader("Discover Events")
 
-# ---------------------------
-# Peak Hours
-# ---------------------------
-st.subheader("⏰ Event Distribution by Hour")
+    colf1, colf2, colf3, colf4 = st.columns([3, 1, 1, 1])
 
-hour_counts = (
-    filtered_df["hour"]
-    .value_counts()
-    .sort_index()
-)
+    search = colf1.text_input("Search by name", "")
+    category = colf2.selectbox("Category", ["All"] + sorted(df["genre"].dropna().unique()))
+    date_filter = colf3.date_input("From date", value=None)
+    max_price = colf4.number_input("Max price (SEK)", value=0)
 
-st.line_chart(hour_counts)
+    filtered = df.copy()
 
-# ---------------------------
-# Map View
-# ---------------------------
-st.subheader("🗺️ Event Locations")
+    if search:
+        filtered = filtered[filtered["name"].str.contains(search, case=False, na=False)]
 
-map_df = filtered_df.dropna(subset=["venue_lat", "venue_lon"])
+    if category != "All":
+        filtered = filtered[filtered["genre"] == category]
 
-st.pydeck_chart(pdk.Deck(
-    initial_view_state=pdk.ViewState(
-        latitude=59.3293,
-        longitude=18.0686,
-        zoom=10,
-        pitch=50,
-    ),
-    layers=[
-        pdk.Layer(
-            "ScatterplotLayer",
-            data=map_df,
-            get_position='[venue_lon, venue_lat]',
-            get_radius=200,
-            get_fill_color=[255, 0, 0],
-            pickable=True,
-        ),
-    ],
-))
+    if date_filter:
+        filtered = filtered[filtered["date"] >= pd.to_datetime(date_filter)]
+
+    if "price" in filtered.columns and max_price > 0:
+        filtered = filtered[filtered["price"] <= max_price]
+
+    st.write(f"### {len(filtered)} events found")
+
+    # -----------------------------
+    # EVENT CARDS
+    # -----------------------------
+    for _, row in filtered.iterrows():
+        with st.container():
+            colA, colB = st.columns([1, 3])
+
+            with colA:
+                if "image_url" in row and pd.notna(row["image_url"]):
+                    st.image(row["image_url"], use_container_width=True)
+
+            with colB:
+                st.markdown(f"### {row['name']}")
+                st.write(f"📅 {row['date'].date()}  |  🕒 {row.get('time','')}")
+                st.write(f"📍 {row['venue_name']} - {row['venue_city']}")
+                st.write(f"🎭 {row.get('genre','')} | {row.get('subgenre','')}")
+
+                if "url" in row and pd.notna(row["url"]):
+                    st.link_button("Buy tickets →", row["url"])
+
+        st.divider()
+
+# -----------------------------
+# MAP TAB
+# -----------------------------
+with tab2:
+    st.subheader("Event Map")
+
+    if "venue_lat" in df.columns and "venue_lon" in df.columns:
+        map_df = df.dropna(subset=["venue_lat", "venue_lon"])
+        map_df = map_df.rename(columns={
+    "venue_lat": "lat",
+    "venue_lon": "lon"
+})
+
+        st.map(map_df[["lat", "lon"]])
+
+        #st.map(map_df[["venue_lat", "venue_lon"]])
+
+    else:
+        st.warning("No coordinates available")
+
+# -----------------------------
+# TRENDS TAB
+# -----------------------------
+with tab3:
+    st.subheader("Event Trends")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        genre_counts = df["genre"].value_counts().reset_index()
+        genre_counts.columns = ["genre", "count"]
+
+        fig = px.bar(genre_counts, x="genre", y="count", title="Events by Genre")
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        monthly = df["month"].value_counts().reset_index()
+        monthly.columns = ["month", "count"]
+
+        fig2 = px.line(monthly, x="month", y="count", title="Events by Month")
+        st.plotly_chart(fig2, use_container_width=True)
+
+# -----------------------------
+# POPULAR TAB
+# -----------------------------
+with tab4:
+    st.subheader("Popular Events")
+
+    popular = df.copy()
+
+    # simple popularity rule (you can replace with real metric)
+    popular = popular.sort_values("date")
+
+    st.dataframe(
+        popular[["name", "date", "venue_name", "genre", "url"]],
+        use_container_width=True
+    )

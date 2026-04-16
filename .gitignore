@@ -1,3 +1,6 @@
 .env
 .venv
-.csv
+*.csv
+__pycache__/
+*.pyc
+app/data/

@@ -24,6 +24,10 @@ def merge_events():
 
     combined = pd.concat(dfs, ignore_index=True)
     output_path = os.path.join(OUTPUT_DIR, "events_combined.csv")
+    # Ta bort interna dubbletter
+    combined = combined.drop_duplicates(subset=["name", "date"], keep="first")
+
+    print(f"Efter deduplicering: {len(combined)} event")
     combined.to_csv(output_path, index=False)
     print(f"\nTotalt {len(combined)} event sparade till {output_path}")
 

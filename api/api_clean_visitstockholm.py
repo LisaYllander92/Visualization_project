@@ -77,7 +77,7 @@ def clean():
         "month_name", "month_num", "year", "hour"
     ]
 
-    tm = pd.read_csv(os.path.join(BASE_DIR, "data", "output", "events_full_year.csv"))
+    tm = pd.read_csv(os.path.join(BASE_DIR, "api", "events_full_year.csv"))
     result["name_lower"] = result["name"].str.lower().str.strip()
     tm["name_lower"] = tm["name"].str.lower().str.strip()
 

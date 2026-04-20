@@ -83,13 +83,18 @@ for page in range(5):
         print(f"Error occurred on page {page}: {e}")
         break
 
-# Create dataframe and clear
 df = pd.DataFrame(all_events)
-df = df.drop_duplicates(subset=['event_id'])  # IMPORTANT: removes duplicates
-df = df.dropna(subset=['name', 'date'])
-df["time"] = pd.to_datetime(df["time"], format= "mixed", errors="coerce").dt.strftime("%H:%M")
 
-# Save to csv-file
-df.to_csv("events_full_year.csv", index=False, encoding='utf-8-sig')
+# Only runs if we have the data
+if not df.empty:
+    print("Cleaning data...")
+    df = df.drop_duplicates(subset=['event_id'])
+    df = df.dropna(subset=['name', 'date'])
 
-print(f"Done! Total saved {len(df)} unique events for the entire year.")
+    df["time"] = pd.to_datetime(df["time"], format="mixed", errors="coerce").dt.strftime("%H:%M")
+
+    # Spara till csv-fil
+    df.to_csv("events_full_year.csv", index=False, encoding='utf-8-sig')
+    print(f"Done! Total saved {len(df)} unique events for the entire year.")
+else:
+    print("Empty DataFrame because no events was found for this search. No file created.")

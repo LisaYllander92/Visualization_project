@@ -1,0 +1,77 @@
+// =====================================================================
+// Ny_Event_HTML_Kort — CLICKABLE VERSION
+// =====================================================================
+// Paste this into the Power BI "Edit measure" window, replacing the
+// existing Ny_Event_HTML_Kort measure.
+//
+// THE ONLY CHANGE vs. your current measure:
+//   Each card's outer <div> is now wrapped in an <a href='...'> tag
+//   that pulls from the [url] column. target='_blank' opens it in a
+//   new tab; inline styles strip the default blue/underline so the
+//   card looks identical to before.
+//
+// If your current measure uses different column names, replace:
+//   [url]          -> your URL column
+//   [image_url]    -> your image column (currently matches the <img src> pattern I saw)
+//   [title]        -> event/museum name column
+//   [subtitle]     -> "What happens next?" / "Upplev konsten" column
+//   [venue_name]   -> venue column
+//   [day_abbr]     -> TOR/ONS/etc column
+//   [day_num]      -> 16 / 15 / etc
+//   [month_abbr]   -> APR
+//   [badge_color]  -> #9ba4c0 for events, #777DA7 for museums
+// =====================================================================
+
+Ny_Event_HTML_Kort =
+VAR Header =
+    "<div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; padding: 10px;'>"
+VAR Footer = "</div>"
+VAR Cards =
+    CONCATENATEX(
+        // Your existing source table / filter goes here.
+        // Common patterns:
+        //   VALUES('Ny_Event_HTML_K'[event_id])
+        //   FILTER('Ny_Event_HTML_K', NOT ISBLANK('Ny_Event_HTML_K'[url]))
+        'Ny_Event_HTML_K',
+
+        VAR LinkUrl   = 'Ny_Event_HTML_K'[url]
+        VAR SafeUrl   = IF(ISBLANK(LinkUrl) || LinkUrl = "", "#", LinkUrl)
+        VAR OpenLink  =
+            "<a href='" & SafeUrl &
+            "' target='_blank' rel='noopener' " &
+            "style='text-decoration:none; color:inherit; display:block; cursor:pointer;'>"
+        VAR CloseLink = "</a>"
+
+        VAR CardHtml =
+            "<div style='border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #1a1a1a; font-family: sans-serif; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #eeeeee;'>" &
+
+                // --- image ---
+                "<img src='" & 'Ny_Event_HTML_K'[image_url] &
+                "' style='width: 100%; height: 125px; object-fit: cover;' " &
+                "onerror=""this.src='https://images.unsplash.com/photo-1543906965-f9520aa2ed8a?q=80&w=800&auto=format&fit=crop'"" />" &
+
+                // --- body ---
+                "<div style='padding: 12px; display: flex; align-items: center; gap: 12px;'>" &
+
+                    // date / info badge (left)
+                    "<div style='min-width: 50px; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; text-align: center; background-color: white;'>" &
+                        "<div style='background-color: " & 'Ny_Event_HTML_K'[badge_color] &
+                        "; color: white; font-size: 10px; font-weight: bold; padding: 2px 0;'>" & 'Ny_Event_HTML_K'[day_abbr] & "</div>" &
+                        "<div style='font-size: 20px; font-weight: 800; color: #1a1a1a; line-height: 1; padding: 4px 0 2px 0;'>" & 'Ny_Event_HTML_K'[day_num] & "</div>" &
+                        "<div style='font-size: 11px; font-weight: bold; color: #1a1a1a; padding-bottom: 4px;'>" & 'Ny_Event_HTML_K'[month_abbr] & "</div>" &
+                    "</div>" &
+
+                    // text block (right)
+                    "<div style='overflow: hidden;'>" &
+                        "<div style='font-size: 14px; font-weight: bold; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>" & 'Ny_Event_HTML_K'[title] & "</div>" &
+                        "<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>" & 'Ny_Event_HTML_K'[subtitle] & "</div>" &
+                        "<div style='font-size: 10px; color: #777DA7; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>" & 'Ny_Event_HTML_K'[venue_name] & "</div>" &
+                    "</div>" &
+
+                "</div>" &
+            "</div>"
+
+        RETURN OpenLink & CardHtml & CloseLink,   // <-- the wrap that makes it clickable
+        ""
+    )
+RETURN Header & Cards & Footer

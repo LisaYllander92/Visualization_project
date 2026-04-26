@@ -15,8 +15,6 @@ The goal is to collect, clean and visualize data about what's happening in Stock
 | Source | Type | Content |
 |---|---|---|
 | Ticketmaster Discovery API | REST API | Events, concerts, sport, theatre |
-| Eventbrite API | REST API | Local events, exhibitions, workshops |
-| Riksteatern | RSS feed | Theatre and performing arts |
 | Google Places API (New) | REST API | Museums, addresses, opening hours, ratings |
 
 ---
@@ -58,14 +56,14 @@ uv sync
 Create a `.env` file in the project root:
 ```
 TICKETMASTER_KEY=your_key_here
-EVENTBRITE_TOKEN=your_token_here
 GOOGLE_PLACES_KEY=your_key_here
 ```
 
 ### 4. Run data fetching scripts
 ```bash
-uv run api/fetch_data_ticketmaster.py
-uv run api/fetch_data_kulturbas.py
+uv run api/api_fetch_full.py
+uv run api/api_fetch_museum.py
+uv run api/museum_popular_hours
 ```
 
 ---
@@ -75,18 +73,17 @@ uv run api/fetch_data_kulturbas.py
 | API | Where to get key |
 |---|---|
 | Ticketmaster | developer.ticketmaster.com |
-| Eventbrite | eventbrite.com/platform/api |
 | Google Places (New) | console.cloud.google.com → Enable "Places API (New)" |
 
 ---
 
 ## Output data
 
-| File | Description |
-|---|---|
+| File                   | Description |
+|------------------------|---|
 | `events_full_year.csv` | All Stockholm events from Ticketmaster |
-| `stockholm_museums_google.csv` | Museums with address, opening hours, rating |
-| `stockholm_museums_full_popularity.csv` | Museums with popularity index (0–100) and free admission flag |
+| `stockholm_museums.csv` | Museums with address, opening hours, rating |
+| `museums_activity.csv` | Museums with popularity index (0–100) and free admission flag |
 
 > CSV files are excluded from Git via `.gitignore`.
 

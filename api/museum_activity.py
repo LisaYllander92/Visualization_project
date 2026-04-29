@@ -85,7 +85,7 @@ def generate_weekly_activity():
                 })
 
     df_activity = pd.DataFrame(activity_rows)
-    df_activity.to_csv("museum_activity.csv", index=False)
+    df_activity.to_csv("../data/museum_activity.csv", index=False)
     print(f"Success! Generated {len(df_activity)} rows of weekly activity data.")
 
 

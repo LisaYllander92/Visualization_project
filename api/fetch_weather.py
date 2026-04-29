@@ -60,5 +60,5 @@ if __name__ == "__main__":
 
     print(df[["date", "temp_max", "temp_min", "precipitation", "weathercode"]].to_string())
 
-    df.to_csv("stockholm_weather.csv", index=False, encoding="utf-8-sig")
+    df.to_csv("../data/stockholm_weather.csv", index=False, encoding="utf-8-sig")
     print("\nSaved to stockholm_weather.csv")

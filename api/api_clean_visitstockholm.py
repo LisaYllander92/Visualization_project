@@ -4,7 +4,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INPUT_PATH = os.path.join(BASE_DIR, "data", "visitstockholm_events.csv")
-OUTPUT_PATH = os.path.join(BASE_DIR, "data", "output", "visitstockholm_clean.csv")
+OUTPUT_PATH = os.path.join(BASE_DIR, "data", "visitstockholm_clean.csv")
 
 def parse_dict(val, key="en"):
     try:

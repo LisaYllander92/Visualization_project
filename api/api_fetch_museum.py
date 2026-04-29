@@ -106,7 +106,7 @@ def fetch_all_museums():
     print(df[["name", "segment", "genre", "popularity_index"]].head().to_string())
 
     # Save to CSV
-    df.to_csv("stockholm_museums.csv", index=False, encoding="utf-8-sig")
+    df.to_csv("../data/stockholm_museums.csv", index=False, encoding="utf-8-sig")
     print("\nSuccess! Saved to stockholm_museums.csv")
 
 

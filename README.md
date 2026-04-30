@@ -1,50 +1,56 @@
-# Stockholm Events & Culture — Visualization Project
+# STHLMs Puls — Stockholm Events Visualization
 
-A data engineering and visualization project that aggregates events, museums and cultural activities in Stockholm from multiple open APIs. Built as part of a collaborative DE + UX school project.
+A data engineering and visualization project that aggregates events, museums 
+and cultural activities in Stockholm from multiple sources. Built as part of 
+a collaborative DE25 school project.
 
----
+## Project Overview
 
-## Project overview
+The goal is to collect, clean and visualize data about what's happening in 
+Stockholm — concerts, theatre, exhibitions, museums and more — presented 
+through an interactive Power BI dashboard and data storytelling graphs.
 
-The goal is to collect, clean and visualize data about what's happening in Stockholm — concerts, theatre, exhibitions, museums and more — to support data-driven decisions and present insights through dashboards and storytelling.
-
----
-
-## Data sources
+## Data Sources
 
 | Source | Type | Content |
-|---|---|---|
+|--------|------|---------|
 | Ticketmaster Discovery API | REST API | Events, concerts, sport, theatre |
-| Google Places API (New) | REST API | Museums, addresses, opening hours, ratings |
+| VisitStockholm | Web scrape/API | Cultural events, exhibitions, guided tours |
+| Fasching | Custom fetch | Jazz & club events |
+| Berns | Custom fetch | Music & nightlife events |
+| Google Places API | REST API | Museums, addresses, opening hours, ratings |
+| Open-Meteo API | REST API | Weather forecast for Stockholm |
 
----
-
-## Project structure
-
-```
+## Project Structure
 visualization_project/
 ├── api/
-│   ├── fetch_data_ticketmaster.py   # Fetch events from Ticketmaster
-│   ├── fetch_data_kulturbas.py      # Fetch Stockholm museums via Google Places
-│   ├── populate_times.py            # Popularity score based on ratings + reviews
-│   └── normalizer.py                # Normalize data from all sources to unified format
+│   ├── api_fetch_full_year.py      # Fetch events from Ticketmaster
+│   ├── api_fetch_visitstockholm.py # Fetch events from VisitStockholm
+│   ├── api_fetch_museum.py         # Fetch museums via Google Places
+│   ├── api_clean_visitstockholm.py # Clean and classify VisitStockholm data
+│   ├── fetch_fasching.py           # Fetch Fasching events
+│   ├── fetch_berns.py              # Fetch Berns events
+│   ├── fetch_weather.py            # Fetch weather data
+│   ├── merge_events.py             # Merge all event sources
+│   └── museum_activity.py          # Museum popularity scores
 ├── eda/
-│   └──                              # EDA notebooks (pandas + duckdb) — to be added
-├── dashboards/
-│   └──                              # Power BI and Streamlit dashboards — to be added
-├── .env                             # API keys (not tracked in Git)
+│   ├── eda_rickard.ipynb           # EDA - Rickard
+│   ├── eda_lisa.ipynb              # EDA - Lisa
+│   ├── eda_dennis.ipynb            # EDA - Dennis
+│   └── eda_mossad.ipynb            # EDA - Mossad
+├── data/
+│   ├── raw/                        # Raw fetched data
+│   └── output/                     # Cleaned and merged data
+├── .env                            # API keys (not tracked in Git)
 ├── .gitignore
 └── README.md
-```
-
----
 
 ## Setup
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/<your-username>/visualization_project.git
-cd visualization_project
+git clone https://github.com/rickardgarnau-byte/datavisualization_course.git
+cd datavisualization_course
 ```
 
 ### 2. Install dependencies
@@ -54,57 +60,62 @@ uv sync
 
 ### 3. Add API keys
 Create a `.env` file in the project root:
-```
 TICKETMASTER_KEY=your_key_here
 GOOGLE_PLACES_KEY=your_key_here
-```
 
-### 4. Run data fetching scripts
+### 4. Fetch and process data
 ```bash
-uv run api/api_fetch_full.py
+uv run api/api_fetch_full_year.py
+uv run api/api_fetch_visitstockholm.py
 uv run api/api_fetch_museum.py
-uv run api/museum_popular_hours
+uv run api/api_clean_visitstockholm.py
+uv run api/merge_events.py
 ```
 
----
-
-## API setup
+## API Setup
 
 | API | Where to get key |
-|---|---|
+|-----|-----------------|
 | Ticketmaster | developer.ticketmaster.com |
+| Visit Stockholm | https://api.visitstockholm.com/ |
 | Google Places (New) | console.cloud.google.com → Enable "Places API (New)" |
+| Open-Meteo | No key needed — free and open |
 
----
+## Output Data
 
-## Output data
+| File | Description |
+|------|-------------|
+| events_full_year.csv | All Stockholm events from Ticketmaster |
+| visitstockholm_clean.csv | Cleaned VisitStockholm events |
+| events_combined.csv | Merged events from all sources (~1200 events) |
+| stockholm_museums.csv | Museums with address, opening hours, rating |
+| museum_activity.csv | Museums with popularity index and free admission flag |
 
-| File                   | Description |
-|------------------------|---|
-| `events_full_year.csv` | All Stockholm events from Ticketmaster |
-| `stockholm_museums.csv` | Museums with address, opening hours, rating |
-| `museums_activity.csv` | Museums with popularity index (0–100) and free admission flag |
-
-> CSV files are excluded from Git via `.gitignore`.
-
----
+CSV files are excluded from Git via `.gitignore`.
 
 ## Deliverables
 
-- [ ] EDA per team member (pandas + duckdb)
-- [ ] Power BI dashboard with KPIs, filters, line chart and bar chart
-- [ ] Min. 2 data storytelling graphs in matplotlib
-- [ ] Streamlit dashboard (VG)
-- [ ] Deployed Streamlit app (VG)
+- [x] EDA per team member (pandas + duckdb)
+- [x] Power BI dashboard with KPIs, filters, bar charts and pie charts
+- [x] Published Power BI dashboard
+- [x] Min. 2 data storytelling graphs in matplotlib
 
----
+## Known Data Quality Issues
+
+- VisitStockholm API uses "Jazz & Blues" as default genre for unclassified 
+  music events. We handle this with a custom `assign_genre()` function that 
+  reclassifies events based on event name.
+- VisitStockholm events lack time data (only date available).
 
 ## Team
 
-<!-- Add names here -->
-
----
+| Name | Role |
+|------|------|
+| Rickard | Startsida, Scenkonst, Nattliv, data pipeline |
+| Lisa | Museum, semantic model, data pipeline |
+| Dennis | Musik |
+| Mossad | Övrigt |
 
 ## Status
 
-> Work in progress — data collection complete, EDA and dashboards in progress.
+Complete — data collection, cleaning, EDA and Power BI dashboard done.

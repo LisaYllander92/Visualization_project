@@ -3,8 +3,8 @@ import ast
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INPUT_PATH = os.path.join(BASE_DIR, "data", "visitstockholm_events.csv")
-OUTPUT_PATH = os.path.join(BASE_DIR, "data", "visitstockholm_clean.csv")
+INPUT_PATH = os.path.join(BASE_DIR, "data", "raw", "visitstockholm_events.csv")
+OUTPUT_PATH = os.path.join(BASE_DIR, "data", "output", "visitstockholm_clean.csv")
 
 def parse_dict(val, key="en"):
     try:
@@ -116,7 +116,7 @@ def clean():
         "month_name", "month_num", "year", "hour"
     ]
 
-    tm = pd.read_csv(os.path.join(BASE_DIR, "api", "events_full_year.csv"))
+    tm = pd.read_csv(os.path.join(BASE_DIR, "data", "output", "events_full_year.csv"))
     result["name_lower"] = result["name"].str.lower().str.strip()
     tm["name_lower"] = tm["name"].str.lower().str.strip()
 

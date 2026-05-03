@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUTPUT_DIR = os.path.join(BASE_DIR, "data")
+OUTPUT_DIR = os.path.join(BASE_DIR, "data", "output")
 
 VENUE_META = {
     "fasching": {
@@ -25,7 +25,6 @@ VENUE_META = {
     },
 }
 
-# Kolumner som ska döpas om för fasching/berns
 RENAME_MAP = {
     "venue": "venue_name",
     "address": "venue_address",
@@ -33,7 +32,6 @@ RENAME_MAP = {
     "lng": "venue_lon",
 }
 
-# Alla kolumner i rätt ordning
 FINAL_COLUMNS = [
     "event_id", "name", "url", "image_url", "date", "time", "status",
     "segment", "genre", "subgenre", "venue_name", "venue_city",
@@ -62,7 +60,7 @@ def merge_events():
         "ticketmaster":   os.path.join(BASE_DIR, "data", "events_full_year.csv"),
         "visitstockholm": os.path.join(BASE_DIR, "data", "visitstockholm_clean.csv"),
         "fasching":       os.path.join(BASE_DIR, "data", "fasching_events.csv"),
-        "berns":          os.path.join(BASE_DIR, "data", "berns_events.csv"),
+        "berns":          os.path.join(BASE_DIR, "data", "../data/raw/berns_events.csv"),
     }
 
     dfs = []
@@ -75,11 +73,10 @@ def merge_events():
         df["source"] = source
         print(f"Laddade {len(df)} event från {source}")
 
-        # Byt namn på kolumner för fasching/berns
         if source in ("fasching", "berns"):
             df = df.rename(columns=RENAME_MAP)
 
-        # Fyll i saknade venue-fält
+
         if source in VENUE_META:
             for col, val in VENUE_META[source].items():
                 if col not in df.columns:
@@ -87,15 +84,13 @@ def merge_events():
                 else:
                     df[col] = df[col].fillna(val)
 
-        # Extrahera datumfält
+
         df = enrich_dates(df)
 
-        # Säkerställ att alla kolumner finns
         for col in FINAL_COLUMNS:
             if col not in df.columns:
                 df[col] = None
 
-        # Behåll bara rätt kolumner i rätt ordning
         df = df[FINAL_COLUMNS]
 
         dfs.append(df)

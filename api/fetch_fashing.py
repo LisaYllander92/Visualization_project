@@ -69,5 +69,5 @@ if __name__ == "__main__":
         print("DEBUG - first 500 chars of response:")
     else:
         print(df[["name", "date", "time"]].to_string())
-        df.to_csv("fasching_events.csv", index=False, encoding="utf-8-sig")
+        df.to_csv("../data/raw/fasching_events.csv", index=False, encoding="utf-8-sig")
         print("\nSaved to fasching_events.csv")

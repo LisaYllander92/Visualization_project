@@ -25,7 +25,7 @@ def fetch_all_events():
 
 def save_events(events):
     df = pd.DataFrame(events)
-    output_path = os.path.join(BASE_DIR, "data", "visitstockholm_events.csv")
+    output_path = os.path.join(BASE_DIR, "data", "raw", "visitstockholm_events.csv")
     df.to_csv(output_path, index=False)
     print(f"Sparade {len(df)} event till {output_path}")
 

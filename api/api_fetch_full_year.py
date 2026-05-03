@@ -94,7 +94,7 @@ if not df.empty:
     df["time"] = pd.to_datetime(df["time"], format="mixed", errors="coerce").dt.strftime("%H:%M")
 
     # Spara till csv-fil
-    df.to_csv("events_full_year.csv", index=False, encoding='utf-8-sig')
+    df.to_csv("../data/raw/events_full_year.csv", index=False, encoding='utf-8-sig')
     print(f"Done! Total saved {len(df)} unique events for the entire year.")
 else:
     print("Empty DataFrame because no events was found for this search. No file created.")

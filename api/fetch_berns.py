@@ -62,5 +62,5 @@ if __name__ == "__main__":
         print("No events found.")
     else:
         print(df[["name", "date"]].to_string())
-        df.to_csv("berns_events.csv", index=False, encoding="utf-8-sig")
+        df.to_csv("../data/raw/berns_events.csv", index=False, encoding="utf-8-sig")
         print("\nSaved to berns_events.csv")

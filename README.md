@@ -63,14 +63,19 @@ Create a `.env` file in the project root:
 TICKETMASTER_KEY=your_key_here
 GOOGLE_PLACES_KEY=your_key_here
 
-### 4. Fetch and process data
-```bash
+### 4. Fetch raw data
+
 uv run api/api_fetch_full_year.py
 uv run api/api_fetch_visitstockholm.py
 uv run api/api_fetch_museum.py
+uv run api/fetch_fasching.py
+uv run api/fetch_berns.py
+uv run api/fetch_weather.py
+uv run api/museum_activity.py
+
+# Clean and merge
 uv run api/api_clean_visitstockholm.py
 uv run api/merge_events.py
-```
 
 ## API Setup
 
@@ -99,6 +104,7 @@ CSV files are excluded from Git via `.gitignore`.
 - [x] Power BI dashboard with KPIs, filters, bar charts and pie charts
 - [x] Published Power BI dashboard
 - [x] Min. 2 data storytelling graphs in matplotlib
+- [ ] Streamlit dashboard (in progress)
 
 ## Known Data Quality Issues
 

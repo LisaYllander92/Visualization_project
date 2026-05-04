@@ -1,0 +1,200 @@
+// =====================================================================
+// Ny_Event_HTML_Kort — CLICKABLE VERSION (full rewrite, ready to paste)
+// =====================================================================
+// This measure rebuilds your event + museum cards exactly as they look
+// now, but wraps every card in <a href='<url>' target='_blank'> so the
+// whole card becomes clickable. It handles BOTH card types:
+//   - EVENTS  (Ticketmaster / VisitStockholm / Fasching / Berns)
+//              -> blue-gray #9ba4c0 badge, weekday + day + month
+//   - MUSEUMS
+//              -> purple #777DA7 badge, INFO / M / ÖPPET
+//
+// Column names assumed (matches FINAL_COLUMNS in merge_events.py
+// and the stockholm_museums.csv header). Rename if your Power BI
+// model uses different names.
+//
+//   Events table    : 'Ny_Event_HTML_K'      columns: [url], [image_url],
+//                     [name], [venue_name], [day_of_week], [month_num],
+//                     [date]
+//   Museums table   : 'Museum'               columns: [url], [name],
+//                     [venue_address], [image_url?]  (see note below)
+//
+// If you only have ONE merged table feeding the visual, ignore the
+// UNION block and just use the events branch with the relevant filter.
+// =====================================================================
+
+
+// ---------------------------------------------------------------------
+// OPTION A — minimal change (if your current measure already works)
+// ---------------------------------------------------------------------
+// Open Ny_Event_HTML_Kort in Power BI, find each place that builds an
+// outer card <div> like this:
+//
+//     "<div style='border-radius: 16px; overflow: hidden; ...'>"
+//        ...card html...
+//     "</div>"
+//
+// Wrap that entire string with:
+//
+//     "<a href='" & [url] & "' target='_blank' rel='noopener' " &
+//     "style='text-decoration:none; color:inherit; display:block; cursor:pointer;'>" &
+//     "<div style='border-radius: 16px; overflow: hidden; ...'>" &
+//        ...card html...
+//     "</div>" &
+//     "</a>"
+//
+// That's the whole change. Everything below is the full rewrite in
+// case you prefer to paste a clean version.
+
+
+// ---------------------------------------------------------------------
+// OPTION B — full rewritten measure
+// ---------------------------------------------------------------------
+
+Ny_Event_HTML_Kort =
+VAR LinkStyle =
+    "text-decoration:none; color:inherit; display:block; cursor:pointer;"
+
+VAR SwedishWeekday =
+    // Convert English day_of_week -> Swedish 3-letter abbr
+    // (Ticketmaster pipeline stores English names via dt.day_name())
+    SWITCH (
+        TRUE (),
+        'Ny_Event_HTML_K'[day_of_week] = "Monday",    "MÅN",
+        'Ny_Event_HTML_K'[day_of_week] = "Tuesday",   "TIS",
+        'Ny_Event_HTML_K'[day_of_week] = "Wednesday", "ONS",
+        'Ny_Event_HTML_K'[day_of_week] = "Thursday",  "TOR",
+        'Ny_Event_HTML_K'[day_of_week] = "Friday",    "FRE",
+        'Ny_Event_HTML_K'[day_of_week] = "Saturday",  "LÖR",
+        'Ny_Event_HTML_K'[day_of_week] = "Sunday",    "SÖN",
+        "—"
+    )
+
+VAR SwedishMonth =
+    SWITCH (
+        'Ny_Event_HTML_K'[month_num],
+        1, "JAN", 2, "FEB", 3, "MAR", 4, "APR",
+        5, "MAJ", 6, "JUN", 7, "JUL", 8, "AUG",
+        9, "SEP", 10, "OKT", 11, "NOV", 12, "DEC",
+        "—"
+    )
+
+VAR Header =
+    "<div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; padding: 10px;'>"
+VAR Footer = "</div>"
+
+// ---- EVENT CARDS ----
+VAR EventCards =
+    CONCATENATEX (
+        FILTER ( 'Ny_Event_HTML_K', NOT ISBLANK ( 'Ny_Event_HTML_K'[url] ) ),
+        VAR SafeUrl =
+            IF ( ISBLANK ( 'Ny_Event_HTML_K'[url] ) || 'Ny_Event_HTML_K'[url] = "",
+                 "#", 'Ny_Event_HTML_K'[url] )
+        VAR DayAbbr = SwedishWeekday
+        VAR MonAbbr = SwedishMonth
+        VAR DayNum  = FORMAT ( 'Ny_Event_HTML_K'[date], "dd" )
+        RETURN
+            "<a href='" & SafeUrl & "' target='_blank' rel='noopener' style='" & LinkStyle & "'>" &
+              "<div style='border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #1a1a1a; font-family: sans-serif; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #eeeeee;'>" &
+                "<img src='" & 'Ny_Event_HTML_K'[image_url] &
+                  "' style='width: 100%; height: 125px; object-fit: cover;' " &
+                  "onerror=""this.src='https://images.unsplash.com/photo-1543906965-f9520aa2ed8a?q=80&w=800&auto=format&fit=crop'"" />" &
+                "<div style='padding: 12px; display: flex; align-items: center; gap: 12px;'>" &
+                  "<div style='min-width: 50px; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; text-align: center; background-color: white;'>" &
+                    "<div style='background-color: #9ba4c0; color: white; font-size: 10px; font-weight: bold; padding: 2px 0;'>" & DayAbbr & "</div>" &
+                    "<div style='font-size: 20px; font-weight: 800; color: #1a1a1a; line-height: 1; padding: 4px 0 2px 0;'>" & DayNum & "</div>" &
+                    "<div style='font-size: 11px; font-weight: bold; color: #1a1a1a; padding-bottom: 4px;'>" & MonAbbr & "</div>" &
+                  "</div>" &
+                  "<div style='overflow: hidden;'>" &
+                    "<div style='font-size: 14px; font-weight: bold; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>" & 'Ny_Event_HTML_K'[name] & "</div>" &
+                    "<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>What happens next?</div>" &
+                    "<div style='font-size: 10px; color: #777DA7; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>" & 'Ny_Event_HTML_K'[venue_name] & "</div>" &
+                  "</div>" &
+                "</div>" &
+              "</div>" &
+            "</a>",
+        ""
+    )
+
+// ---- MUSEUM CARDS ----
+// If your museum table is called something else (e.g. 'Museum_info',
+// 'stockholm_museums'), change the table reference below.
+VAR MuseumCards =
+    CONCATENATEX (
+        FILTER ( 'Museum', NOT ISBLANK ( 'Museum'[url] ) ),
+        VAR SafeUrl =
+            IF ( ISBLANK ( 'Museum'[url] ) || 'Museum'[url] = "",
+                 "#", 'Museum'[url] )
+        // Museum rows don't always carry an image_url. If your model
+        // doesn't have one, swap the next line for a static fallback:
+        //   VAR ImgUrl = "https://images.unsplash.com/photo-1565060169187-eb73b6c04e86?q=80&w=800"
+        VAR ImgUrl =
+            COALESCE (
+                'Museum'[image_url],
+                "https://images.unsplash.com/photo-1565060169187-eb73b6c04e86?q=80&w=800"
+            )
+        RETURN
+            "<a href='" & SafeUrl & "' target='_blank' rel='noopener' style='" & LinkStyle & "'>" &
+              "<div style='border-radius: 16px; overflow: hidden; background-color: #ffffff; color: #1a1a1a; font-family: sans-serif; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #eeeeee;'>" &
+                "<img src='" & ImgUrl &
+                  "' style='width: 100%; height: 125px; object-fit: cover;' " &
+                  "onerror=""this.src='https://images.unsplash.com/photo-1565060169187-eb73b6c04e86?q=80&w=800'"" />" &
+                "<div style='padding: 12px; display: flex; align-items: center; gap: 12px;'>" &
+                  "<div style='min-width: 50px; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; text-align: center; background-color: white;'>" &
+                    "<div style='background-color: #777DA7; color: white; font-size: 10px; font-weight: bold; padding: 2px 0;'>INFO</div>" &
+                    "<div style='font-size: 20px; font-weight: 800; color: #777DA7; line-height: 1.2; padding: 6px 0 0 0;'>M</div>" &
+                    "<div style='font-size: 9px; font-weight: bold; color: #666; padding-bottom: 4px;'>ÖPPET</div>" &
+                  "</div>" &
+                  "<div style='overflow: hidden;'>" &
+                    "<div style='font-size: 14px; font-weight: bold; line-height: 1.2; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>" & 'Museum'[name] & "</div>" &
+                    "<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>Upplev konsten</div>" &
+                    "<div style='font-size: 10px; color: #777DA7; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>" & 'Museum'[venue_address] & "</div>" &
+                  "</div>" &
+                "</div>" &
+              "</div>" &
+            "</a>",
+        ""
+    )
+
+RETURN Header & EventCards & MuseumCards & Footer
+
+
+// ---------------------------------------------------------------------
+// OPTION C — if your current measure uses a UNION/unified table
+// ---------------------------------------------------------------------
+// Some models pre-merge events + museums into one table with a
+// [card_type] column. In that case keep just ONE CONCATENATEX and
+// branch inside:
+//
+//   SWITCH ( TRUE (),
+//       [card_type] = "museum", <museum card html>,
+//                                <event  card html>
+//   )
+//
+// The anchor wrapper stays identical in both branches.
+
+
+// ---------------------------------------------------------------------
+// TROUBLESHOOTING
+// ---------------------------------------------------------------------
+// 1. Clicks do nothing in Power BI
+//    -> Select the HTML visual. Format pane > look for
+//       "Allow interactions" / "Allow links" / "Enable hyperlinks".
+//       Turn it ON. Some HTML custom visuals sandbox <a> clicks.
+//
+// 2. The cards disappear entirely after pasting
+//    -> One of the column references doesn't exist. Open the
+//       measure, remove the URL wrap first, confirm cards render,
+//       then add the wrap back. The FILTER(... NOT ISBLANK) lines
+//       are the most common culprit if a column name differs.
+//
+// 3. Links go to "about:blank#" or a broken page
+//    -> Some rows have a blank / malformed url. The SafeUrl guard
+//       catches blank but not malformed. Check the source CSV
+//       for stray whitespace, or add:
+//          VAR SafeUrl = IF ( LEFT ( [url], 4 ) <> "http", "#", [url] )
+//
+// 4. Performance: cards feel slow with 1,300 rows
+//    -> Add a TOPN or filter at the source-table level. Example:
+//          TOPN ( 50, 'Ny_Event_HTML_K', 'Ny_Event_HTML_K'[date], ASC )
+//       Power BI HTML visuals choke above ~200 cards in one measure.

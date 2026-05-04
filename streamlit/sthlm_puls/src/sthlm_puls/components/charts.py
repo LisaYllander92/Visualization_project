@@ -7,21 +7,9 @@ from sthlm_puls.utils.constants import COLORS
 
 
 def plot_events_weather(df_merged: pd.DataFrame) -> plt.Figure:
-    """
-    Bar chart showing number of events per day with weather icons and temperature.
-    Highlights the best weather day.
-
-    Args:
-        df_merged: DataFrame with columns:
-                   date, weathercode, temp_max, icon, day_label, antal_events
-    Returns:
-        matplotlib Figure
-    """
-    sunny  = df_merged["weathercode"].isin([0, 1, 2])
-    rainy  = df_merged["weathercode"].isin([51, 67, 71, 80, 81, 82])
 
     bar_colors = [
-        COLORS["blue_dark"] if (row["weathercode"] in [0, 1, 2] and row["temp_max"] >= 15)
+        COLORS["pink"] if row["temp_max"] == df_merged["temp_max"].max()
         else COLORS["gray_light"]
         for _, row in df_merged.iterrows()
     ]
@@ -46,25 +34,11 @@ def plot_events_weather(df_merged: pd.DataFrame) -> plt.Figure:
                 ha="center", va="bottom", fontsize=8,
                 color=COLORS["gray_2"])
 
-    if sunny.any():
-        idx = df_merged[sunny]["temp_max"].idxmax()
-        # Om soligaste dagen är bland de första, lägg texten till höger istället
-        x_offset = -2.5 if idx > 2 else 1.5
-        rad = 0.2 if idx > 2 else -0.2
-
-        ax.annotate(
-            text="Sunny & warm —\nperfect for outdoor culture!",
-            xy=(idx, df_merged.loc[idx, "num_events"]),
-            xytext=(idx + x_offset, df_merged.loc[idx, "num_events"] + y_max * 0.4),
-            fontsize=8, color=COLORS["gray_3"],
-            arrowprops=dict(arrowstyle="->", connectionstyle=f"arc3,rad={rad}",
-                            linewidth=1.2, color=COLORS["blue_dark"])
-        )
-
     legend_items = [
-        mpatches.Patch(color=COLORS["blue_dark"],  label="Best weather day"),
+        mpatches.Patch(color=COLORS["pink"], label="Warmest day"),
         mpatches.Patch(color=COLORS["gray_light"], label="Other days"),
     ]
+
     ax.legend(handles=legend_items, fontsize=8, frameon=False,
               labelcolor=COLORS["gray_3"], loc="upper left")
 

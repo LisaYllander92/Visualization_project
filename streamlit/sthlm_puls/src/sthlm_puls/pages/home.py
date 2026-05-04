@@ -9,3 +9,4 @@ def home():
     st.markdown(read_textfile(MARKDOWN_PATH / "intro_events.md"))
 
 if __name__ == "__main__":
+    home()

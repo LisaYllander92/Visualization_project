@@ -3,7 +3,7 @@ import matplotlib.patches as mpatches
 from matplotlib.font_manager import FontProperties
 import numpy as np
 import pandas as pd
-from utils.constants.py import COLORS
+from sthlm_puls.utils.constants import COLORS
 
 
 def plot_events_weather(df_merged: pd.DataFrame) -> plt.Figure:
@@ -21,7 +21,7 @@ def plot_events_weather(df_merged: pd.DataFrame) -> plt.Figure:
     rainy  = df_merged["weathercode"].isin([51, 67, 71, 80, 81, 82])
 
     bar_colors = [
-        COLORS["blue_dark"] if (row["weathercode"] in [0, 1, 2] and row["temp_max"] >= 18)
+        COLORS["blue_dark"] if (row["weathercode"] in [0, 1, 2] and row["temp_max"] >= 15)
         else COLORS["gray_light"]
         for _, row in df_merged.iterrows()
     ]
@@ -48,24 +48,17 @@ def plot_events_weather(df_merged: pd.DataFrame) -> plt.Figure:
 
     if sunny.any():
         idx = df_merged[sunny]["temp_max"].idxmax()
+        # Om soligaste dagen är bland de första, lägg texten till höger istället
+        x_offset = -2.5 if idx > 2 else 1.5
+        rad = 0.2 if idx > 2 else -0.2
+
         ax.annotate(
             text="Sunny & warm —\nperfect for outdoor culture!",
             xy=(idx, df_merged.loc[idx, "num_events"]),
-            xytext=(idx - 2.5, df_merged.loc[idx, "num_events"] + y_max * 0.4),
+            xytext=(idx + x_offset, df_merged.loc[idx, "num_events"] + y_max * 0.4),
             fontsize=8, color=COLORS["gray_3"],
-            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.2",
+            arrowprops=dict(arrowstyle="->", connectionstyle=f"arc3,rad={rad}",
                             linewidth=1.2, color=COLORS["blue_dark"])
-        )
-
-    if rainy.any():
-        idx = df_merged[rainy]["num_events"].idxmax()
-        ax.annotate(
-            text="Rainy day —\ngreat time for a museum!",
-            xy=(idx, df_merged.loc[idx, "num_events"]),
-            xytext=(idx + 1.2, df_merged.loc[idx, "num_events"] + y_max * 0.35),
-            fontsize=8, color=COLORS["gray_3"],
-            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=-0.2",
-                            linewidth=1.2, color=COLORS["gray_2"])
         )
 
     legend_items = [

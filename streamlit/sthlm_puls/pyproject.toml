@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "css>=0.1",
     "duckdb>=1.5.2",
     "matplotlib>=3.10.9",
     "pandas>=3.0.2",

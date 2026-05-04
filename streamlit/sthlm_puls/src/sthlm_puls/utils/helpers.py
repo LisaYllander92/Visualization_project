@@ -2,9 +2,8 @@ from sthlm_puls.utils.constants import DATA_PATH
 import pandas as pd
 import streamlit as st
 
-
-def read_textfile(path):
-    with open(path) as file:
+def read_textfile(path) -> str:
+    with open(path, "r", encoding="utf-8") as file:
         return file.read()
 
 

@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit.sthlm_puls.src.sthlm_puls.utils.constants import MARKDOWN_PATH
+from sthlm_puls.utils.constants import MARKDOWN_PATH
 
 
 def dashboard_layout():

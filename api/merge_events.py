@@ -57,10 +57,10 @@ def enrich_dates(df):
 
 def merge_events():
     files = {
-        "ticketmaster":   os.path.join(BASE_DIR, "data", "events_full_year.csv"),
-        "visitstockholm": os.path.join(BASE_DIR, "data", "visitstockholm_clean.csv"),
-        "fasching":       os.path.join(BASE_DIR, "data", "fasching_events.csv"),
-        "berns":          os.path.join(BASE_DIR, "data", "../data/raw/berns_events.csv"),
+        "ticketmaster": os.path.join(BASE_DIR, "data", "raw", "events_full_year.csv"),
+        "visitstockholm": os.path.join(BASE_DIR, "data", "output", "visitstockholm_clean.csv"),
+        "fasching": os.path.join(BASE_DIR, "api", "../data/raw/fasching_events.csv"),
+        "berns": os.path.join(BASE_DIR, "data", "raw", "berns_events.csv"),
     }
 
     dfs = []

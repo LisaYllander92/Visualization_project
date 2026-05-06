@@ -22,6 +22,7 @@ through an interactive Power BI dashboard and data storytelling graphs.
 | Open-Meteo API | REST API | Weather forecast for Stockholm |
 
 ## Project Structure
+```
 visualization_project/
 ├── api/
 │   ├── api_fetch_full_year.py      # Fetch events from Ticketmaster
@@ -44,6 +45,7 @@ visualization_project/
 ├── .env                            # API keys (not tracked in Git)
 ├── .gitignore
 └── README.md
+```
 
 ## Setup
 

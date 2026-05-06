@@ -49,8 +49,8 @@ visualization_project/
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/rickardgarnau-byte/datavisualization_course.git
-cd datavisualization_course
+git clone https://github.com/lisayllander92/Visualization_project.git
+cd Visualization_project
 ```
 
 ### 2. Install dependencies
@@ -104,7 +104,6 @@ CSV files are excluded from Git via `.gitignore`.
 - [x] Power BI dashboard with KPIs, filters, bar charts and pie charts
 - [x] Published Power BI dashboard
 - [x] Min. 2 data storytelling graphs in matplotlib
-- [ ] Streamlit dashboard (in progress)
 
 ## Known Data Quality Issues
 
